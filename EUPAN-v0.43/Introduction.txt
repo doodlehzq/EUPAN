@@ -1,0 +1,113 @@
+*******************************************************
+**     EUPAN ---- Eukaryotic PAN-genome analysis     **
+*******************************************************
+
+Introduction
+
+Pan-genome analyses of bacteria and archaea are routinely carried out to interpret the within-species variation. However, eukaryotic pan-genome analyses are limited by the large sizes and high complexities of their genomes. Therefore we develloped a new strategy ---- EUPAN for eukaryotic pan-genome analysis. EUPAN enables accurately detection of gene presence-absence variations (gene PAVs) at sequencing depth of ~20x for eukaryotic large genomes and can be directly applied to current large re-sequencing projects primarily aimming at Single nucleotide variations (SNVs).
+
+We proposed EUPAN strategy primarily in the 3,000 rice genome projects. EUPAN utilizes a "map-to-pan" strategy to determine gene PAVs of each individual (see the following figure). EUPAN strategy involves (1) the parallel quality control of raw sequencing data; (2) de novo assembly of individual genomes; (3) construction of pan-genome sequences based on the de novo assemblies and available reference genomes; (4) gene annotation of the pan-genome sequences; (5) determination of PAVs based on mapping individual reads to pan-genome sequences; and (6) PAV-based pan-genome analysis.
+
+Eukaryotic large genome studies always involve big data and many tools and softwares and require very careful parameter selection process. Therefore, we also provide the EUPAN toolbox to accelarate this kind of study. The toolbox provides tools working on a single machine and tools working on supercomputer based on LSF system (in which, users use "bsub" to submit jobs).
+
+
+Installation
+
+   Requirements
+     1) R 3.1 or later (https://www.r-project.org/)
+        R is utilized for visulization and statistical tests in EUPAN toolbox. Please install R first and make sure R and Rscript are under your PATH. 
+     2) R packages
+        Several R packages are needed including ggplot2, reshape2 and ape packages. Follow the Installation step 3) or you can install the packages by yourself.
+
+   Installation procedures
+     1) Download the EUPAN toolbox here.
+     2) Uncompress the EUPAN toolbox package.
+          tar zxvf EUPAN-v1.0.tar.gz
+     3) Install necessary R packages.
+          cd EUPAN
+          Rscript installRPac
+     4) Compile necessary tools.
+          make
+        You will find executable files: ccov and bam2cov in bin/ directory.
+     5) Add bin/ to PATH and add lib/ to LD_LIBRARY_PATH. 
+        To do this, add the following text to ~/.bash_profile
+           export PATH=$PATH:/path/to/EUPAN/bin:
+           export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/path/to/EUPAN/lib/:
+           export PERL5LIB=$PERL5LIB:/path/to/EUPAN/lib/:
+        and run
+           source ~/.bash_profile
+     6) Test if EUPAN toolbox is installed successfully.
+           eupan
+        If you see the following content, congratulations! EUPAN toolbox is successfully installed. If not, see if all the requirements are satisfied or contact the author for help.
+        
+	Usage: eupan <command> ...
+
+	Avalable commands:
+        	 qualSta         View the overall sequencing quality of a large number of files
+        	 trim            Trim or filter low-quality reads parallelly
+        	 alignRead       Map reads to a reference parallelly
+        	 sam2bam         Covert alignments (.sam) to sorted .bam files
+        	 bamSta          Statistics of parallel mapping
+        	 assemble        Assemble reads parallelly
+        	 assemSta        Statistics of parallel assembly
+        	 getUnalnCtg     Extract the unaligned contigs from nucmer alignment (processed by quast)
+        	 rmRedundant     Remove redundant contigs of a fasta file
+        	 geneCov         Calculate gene body coverage and CDS coverage
+        	 geneExist       Determine gene presence-absence based on gene body coverage and CDS coverage
+        	 geneFam         Cluster genes to gene families
+        	 gFamExist       Determine gene family presence-absence based on gene presence-absence
+        	 bam2bed         Calculate genome region presence-absence from .bam
+        	 fastaSta        Calculate statistics of fasta file
+      
+
+Usage
+
+Tools working on single machine can be used via "eupan" command and tools working on LSF system can be used via "eupanLSF" command.
+
+eupan provides the following tools:
+
+        qualSta         View the overall sequencing quality of a large number of files
+        trim            Trim or filter low-quality reads parallelly
+        alignRead       Map reads to a reference parallelly
+        sam2bam         Covert alignments (.sam) to sorted .bam files
+        bamSta          Statistics of parallel mapping
+        assemble        Assemble reads parallelly
+        assemSta        Statistics of parallel assembly
+        getUnalnCtg     Extract the unaligned contigs from nucmer alignment (processed by quast)
+        rmRedundant     Remove redundant contigs of a fasta file
+        geneCov         Calculate gene body coverage and CDS coverage
+        geneExist       Determine gene presence-absence based on gene body coverage and CDS coverage
+        geneFam         Cluster genes to gene families
+        gFamExist       Determine gene family presence-absence based on gene presence-absence
+        bam2bed         Calculate genome region presence-absence from .bam
+        fastaSta        Calculate statistics of fasta file
+
+
+eupanLSF provides the following tools:
+
+        qualSta         Run fastqc on a large number of files
+        mergeQualSta    View the overall sequencing quality by combining fastqc outputs
+        trim            Trim or filter low-quality reads parallelly
+        align           Map reads to a reference parallelly
+        sam2bam         Convert alignments (.sam) to sorted .bam files
+        bamSta          Statistics of parallel mapping
+        assemble        Assemble reads parallelly
+        assemSta        Statistics of parallel assembly
+        mergeAssemSta   Merge statistics of all indivduals to a single file
+        getUnalnCtg     Extract the unaligned contigs from nucmer alignment (processed by quast)
+        mergeUnalnCtg   Merge the unaligned contigs into a single file
+        rmRedundant     Remove redundant contigs of a fasta file
+        geneCov         Calculate gene body coverage and CDS coverage
+        geneExist       Determine gene presence-absence based on gene body coverage and CDS coverage
+        geneFam         Cluster genes to gene families
+        gFamExist       Determine gene family presence-absence based on gene presence-absence
+        bam2bed         Calculate genome region presence-absence from .bam
+        fastaSta        Calculate statistics of fasta file
+
+
+We also provide the eupan SOP and eupanLSF SOP based on a small test datasets. We reccomend the users to follow the SOPs step by step before applying EUPAN toolbox on their own data.
+
+
+Contact information
+doodlehzq@sjtu.edu.cn
+ccwei@sjtu.edu.cn

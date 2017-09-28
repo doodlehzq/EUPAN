@@ -1,0 +1,89 @@
+#!/usr/bin/perl
+#Created by Hu Zhiqiang, 2014-9-5
+use strict;
+use warnings;
+use Getopt::Std;
+use vars qw($opt_h);
+getopts("hm:t:");
+
+my $usage="\nUsage: $0 [options] <contig_file> <unaligned_contig_list> <output_file> <prefix>
+
+$0 is used to collect unaligned contigs.
+
+Necessary input description:
+
+  contig_file             <string>    Assembled contig fasta file.
+
+  unaligned_contig_list   <string>    File including a list of names of unaligned contigs. 
+
+  output_file             <string>    Output unaligned contig files
+
+  prefix                  <string>    A prefix added to the name of each contig. This is used
+                                      to mark which sample the contigs are from.
+
+Options:
+     -h                               Print this usage page.
+
+";
+
+die $usage if @ARGV!=4;
+die $usage if defined($opt_h);
+my ($contig_file,$unlist_file,$outfile,$prefix)=@ARGV;
+
+#Check input file existence
+die("Error01: Cannot find $contig_file\n") unless(-e $contig_file);
+die("Error02: Cannot find $unlist_file\n") unless(-e $unlist_file);
+
+#Check existence of output directory
+print STDERR "Warning: $outfile file exists. Overwrite.\n" if -e $outfile;
+
+#read in unaligned contig list
+my %unlist=read_list($unlist_file);
+
+#collect unaligned contigs from contig file
+open(OUT,">$outfile") || die("Error04: Cannot write $outfile\n");
+if($contig_file=~/\.gz$/){
+    open(CONTIG,"zcat $contig_file |") || die("Error05: Cannot read $contig_file\n");
+}
+else{
+    open(CONTIG,$contig_file) || die("Error05: Cannot read $contig_file\n");
+}
+my $flag=0;
+while(<CONTIG>){
+    if(/^>(.+)$/){
+	my $m=$1;
+	$m=~s/\ /_/g;
+	if(defined($unlist{$m})){
+	    $flag=1;
+	    $unlist{$m}=1;
+	    print OUT ">$prefix:$m\n";
+	}
+	else{
+	    $flag=0;
+	}
+    }
+    else{
+	print OUT $_ if $flag==1;
+    }
+}
+close CONTIG;
+close OUT;
+
+#Examine if all unaligned contigs are extracted
+foreach my $k (keys(%unlist)){
+    print STDERR "WARNING: Cannot find $k in $contig_file\n" if $unlist{$k}==0;
+}
+
+
+############# sub routines ##############
+sub read_list{
+    my ($file)=@_;
+    my %h;
+    open(FILE,$file) || die("Error03: Cannot read $file\n");
+    while(<FILE>){
+	chomp;
+	$h{$_}=0;
+    }
+    close FILE;
+    return %h;
+}

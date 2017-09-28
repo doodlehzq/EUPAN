@@ -1,0 +1,191 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+use EUPANqualStaLSF;
+use EUPANtrimLSF;
+use EUPANmapLSF;
+use EUPANsamToBamLSF;
+use EUPANbamStaLSF;
+use EUPANassemLSF;
+use EUPANassemStaLSF;
+use EUPANunalnCtgLSF;
+use EUPANrmRdtLSF;
+use EUPANfastaStaLSF;
+use EUPANgeneCovLSF;
+use EUPANpTpGLSF;
+use EUPANgeneExistLSF;
+use EUPANbam2bedLSF;
+use EUPANsimLSF;
+
+checkPRE() if @ARGV==0;
+PrintUsage() if @ARGV<1;
+my %commands=(
+    "qualSta"       => 0,
+    "mergeQualSta"  => 0,
+    "trim"          => 0,
+    "alignRead"     => 0,
+    "sam2bam"       => 0,
+    "bamSta"        => 0,
+    "assemble"      => 0,
+    "assemSta"      => 0,
+    "mergeAssemSta" => 0,
+    "getUnalnCtg"   => 0,
+    "mergeUnalnCtg" => 0,
+    "rmRedundant"   => 0,
+    "pTpG"          => 0,
+    "geneCov"       => 0,
+    "mergeGeneCov"  => 0,
+    "geneExist"     => 0,
+    "subSample"     => 0,
+    "gFamExist"     => 0,
+    "bam2bed"       => 0, 
+    "fastaSta"      => 0,
+    "sim"           => 0,
+);
+
+my $com=shift @ARGV;
+if(defined $commands{$com}){
+    $commands{$com}=1;
+}
+else{
+    print STDERR "Invalid command: $com\n";
+    PrintUsage(); 
+}
+if($commands{"qualSta"}){
+    if(qualStaLSF::checkQual(@ARGV)){
+	print STDERR "Run \"eupanLSF mergeQualSta\" command after all jobs are finished!\n";
+    }
+}
+elsif($commands{"mergeQualSta"}){
+    qualStaLSF::mergeFastqc(@ARGV);
+}
+elsif($commands{"trim"}){
+    trim::trimFastq(@ARGV);
+}
+elsif($commands{"alignRead"}){
+    align::map(@ARGV);
+}
+elsif($commands{"sam2bam"}){
+    adjAlign::sam2bam(@ARGV);
+}
+elsif($commands{"bamSta"}){
+    bamStat::bamsta(@ARGV);
+}
+elsif($commands{"assemble"}){
+    assembly::assemble(@ARGV);
+}
+elsif($commands{"assemSta"}){
+    assemStat::runQuast(@ARGV);
+}
+elsif($commands{"mergeAssemSta"}){
+    assemStat::mergeAssemSta(@ARGV);
+}
+elsif($commands{"getUnalnCtg"}){
+    unalnCtg::getUnaln(@ARGV);
+}
+elsif($commands{"mergeUnalnCtg"}){
+    unalnCtg::mergeUnaln(@ARGV);
+}
+elsif($commands{"rmRedundant"}){
+    rmRDT::rmRDT(@ARGV);
+}
+elsif($commands{"fastaSta"}){
+    fastaSta::sta(@ARGV);
+}
+elsif($commands{"geneCov"}){
+    geneCov::cov(@ARGV);
+}
+elsif($commands{"mergeGeneCov"}){
+    geneCov::merge(@ARGV);
+}
+elsif($commands{"pTpG"}){
+    pTpG::pTpG(@ARGV);
+}
+elsif($commands{"geneExist"}){
+    gExist::checkGeneExist(@ARGV);
+}
+elsif($commands{"subSample"}){
+    gExist::subsetSample(@ARGV);
+}
+elsif($commands{"gFamExist"}){
+    gExist::gE2gfE(@ARGV);
+}
+elsif($commands{"bam2bed"}){
+    bam2cov::bam2bed(@ARGV);
+}
+elsif($commands{"sim"}){
+    sim::simulation(@ARGV);
+    sim::pavPlot(@ARGV);
+}
+
+
+sub PrintUsage{
+    print STDERR "\nUsage: eupanLSF <command> ...\n\n";
+    print STDERR "Avalable commands:\n";
+    print STDERR "\tqualSta      \tRun fastqc on a large number of files\n";
+    print STDERR "\tmergeQualSta \tView the overall sequencing quality by combining fastqc outputs\n";
+    print STDERR "\ttrim         \tTrim or filter low-quality reads parallelly\n";
+    print STDERR "\talignRead    \tMap reads to a reference parallelly\n";
+    print STDERR "\tsam2bam      \tConvert alignments (.sam) to sorted .bam files\n";
+    print STDERR "\tbamSta       \tStatistics of parallel mapping\n";
+    print STDERR "\tassemble     \tAssemble reads parallelly\n";
+    print STDERR "\tassemSta     \tStatistics of parallel assembly\n";
+    print STDERR "\tmergeAssemSta\tMerge statistics of all indivduals to a single file\n";
+    print STDERR "\tgetUnalnCtg  \tExtract the unaligned contigs from nucmer alignment (processed by quast)\n";
+    print STDERR "\tmergeUnalnCtg\tMerge the unaligned contigs into a single file\n";
+    print STDERR "\trmRedundant  \tRemove redundant contigs of a fasta file\n";
+    print STDERR "\tpTpG         \tGet the longest transcripts to represent genes\n";
+    print STDERR "\tgeneCov      \tCalculate gene body coverage and CDS coverage\n";
+    print STDERR "\tmergeGeneCov \tMerge gene body coverage and cds coverage of each sample to two summary files\n";
+    print STDERR "\tgeneExist    \tDetermine gene presence-absence based on gene body coverage and CDS coverage\n";
+    print STDERR "\tsubSample   \tSelect subset of samples from gene PAV profile\n";
+    print STDERR "\tgFamExist    \tDetermine gene family presence-absence based on gene presence-absence\n";
+    print STDERR "\tbam2bed      \tCalculate genome region presence-absence from .bam\n";
+    print STDERR "\tfastaSta     \tCalculate statistics of fasta file\n";
+    print STDERR "\tsim         \tsimulation and plot of the pan-genome and the core genome\n";
+    exit(-1);
+}
+
+
+sub checkPRE{
+    my $exec="ccov";
+    my @path=split /:/,$ENV{PATH};
+    my $fpflag=0;
+    foreach my $p (@path){
+	$p.="/".$exec;
+	if(-e $p && -x $p){
+	    $fpflag=1;
+	    last;
+	}
+    }
+    die("Can not find ccov in your PATH!\n
+") unless($fpflag);
+
+    $exec="Rscript";
+    @path=split /:/,$ENV{PATH};
+    $fpflag=0;
+    foreach my $p (@path){
+	$p.="/".$exec;
+	if(-e $p && -x $p){
+	    $fpflag=1;
+	    last;
+	}
+    }
+    die("Can not find Rscript in your PATH!\n
+") unless($fpflag);
+
+
+    $exec="bam2cov";
+    @path=split /:/,$ENV{PATH};
+    $fpflag=0;
+    foreach my $p (@path){
+	$p.="/".$exec;
+	if(-e $p && -x $p){
+	    $fpflag=1;
+	    last;
+	}
+    }
+    die("Can not find bam2cov in your PATH!\n
+") unless($fpflag);
+}
+
